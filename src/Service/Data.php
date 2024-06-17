@@ -34,24 +34,30 @@ class Data
     static function GetProperties($entity)
     {
         $reflect = new \ReflectionClass($entity);
-        // $props   = $reflect->getProperties(\ReflectionProperty::IS_PRIVATE);
         $props   = $reflect->getProperties();
         $arr = [];
-        $no_need = ['title', 'imageFile', 'videoFile'];
+        $no_need = ['title'];
         if (!$_ENV['IS_MULTILINGUAL']) {
             array_push($no_need, 'language');
         }
-        foreach ($props as $prop) {
-            $prop_name = $prop->getName();
-            if (!in_array($prop_name, $no_need)) {
-                // array_push($arr, $prop->getName());
 
-                // Insert space before Capital letters;
-                $name = preg_replace('/(\w+)([A-Z])/U', '\\1 \\2', $prop_name);
-                $name = ucfirst($name);
-                $arr[$name] = $prop_name;
+        foreach ($props as $prop) {
+            foreach ($prop->getAttributes() as $attrib) {
+                // only ORM fields
+                if (str_contains($attrib->getName(), 'Doctrine\ORM\Mapping')) {
+                    $prop_name = $prop->getName();
+
+                    // Insert space before Capital letters;
+                    $name = preg_replace('/(\w+)([A-Z])/U', '\\1 \\2', $prop_name);
+                    $name = ucfirst($name);
+                    if (!in_array($prop_name, $no_need)) {
+                        $arr[$name] = $prop_name;
+                    }
+                    break;
+                }
             }
         }
+
         return $arr;
     }
     
